@@ -22,12 +22,24 @@ cmake_minimum_required(VERSION "3.12.0")	# The most recent version is 4.0 (but t
 #
 
 
-# Custom naming for the project
-set(PROJECT_CUSTOM_NAME "MainDllTemplate")
-set(PROJECT_VERSION "1.0.0")
-set(DLL_NAME "mydll.dll")
+file(READ "config.txt" CONFIG_CONTENTS)
 
-message(STATUS "Compiling DLL: ${DLL_NAME} (v${PROJECT_VERSION})")
+string(REGEX MATCH "PROJECT_NAME=([^\n]*)" _ ${CONFIG_CONTENTS})
+string(REGEX REPLACE "PROJECT_NAME=" "" PROJECT_NAME "${CMAKE_MATCH_0}")
+
+string(REGEX MATCH "LIBRARY_NAME=([^\n]*)" _ ${CONFIG_CONTENTS})
+string(REGEX REPLACE "LIBRARY_NAME=" "" LIBRARY_NAME "${CMAKE_MATCH_0}")
+
+string(REGEX MATCH "PROJECT_VERSION=([^\n]*)" _ ${CONFIG_CONTENTS})
+string(REGEX REPLACE "PROJECT_VERSION=" "" PROJECT_VERSION "${CMAKE_MATCH_0}")
+
+
+# Custom naming for the project
+#set(PROJECT_CUSTOM_NAME "MainDllTemplate")
+#set(PROJECT_VERSION "1.0.0")
+#set(DLL_NAME "mydll.dll")
+
+message(STATUS "Compiling DLL: ${LIBRARY_NAME} (v${PROJECT_VERSION})")
 
 
 # ===========================
@@ -40,7 +52,7 @@ option(BUILD_SHARED_LIBS	" "		ON)
 option(ENABLE_TESTING		" "		ON)
 option(BUILD_DOCS			" "		ON)
 
-project(${PROJECT_CUSTOM_NAME} VERSION ${PROJECT_VERSION})	# The name of the project
+project(${PROJECT_NAME} VERSION ${PROJECT_VERSION})	# The name of the project
 
 # Set the C++ standard to C++17 & (optional) If the version is not supported FAIL the build
 set(CMAKE_CXX_STANDARD 17)		
@@ -137,8 +149,6 @@ enable_testing()
 #	message(STATUS "Testing Included")
 #endif()
 
-
-
 message(STATUS "Building : " ${PROJECT_NAME})
 
 # ===========================
@@ -165,16 +175,6 @@ message(STATUS "Building : " ${PROJECT_NAME})
 # ==========================
 # CUSTOM CMAKE CONFIGURATION
 # ==========================
-
-
-
-
-
-
-
-
-
-
 
 #enable_testing()
 #

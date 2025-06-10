@@ -10,7 +10,7 @@ add_executable(UnitTests ${MY_SOURCES})
 
 # Link the library added in the top-cmakelists.txt
 target_include_directories(UnitTests PRIVATE "${CMAKE_SOURCE_DIR}/include")
-target_link_libraries(UnitTests PRIVATE MainDll Catch2::Catch2WithMain)
+target_link_libraries(UnitTests PRIVATE ${LIBRARY_NAME} Catch2::Catch2WithMain)
 
 #include(CTest)
 #include(Catch)
