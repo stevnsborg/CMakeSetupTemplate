@@ -6,37 +6,6 @@
 cmake_minimum_required(VERSION "3.12.0")	# The most recent version is 4.0 (but too recent to commit general inclusion)
 
 # ===========================
-# LANGUAGE CONFIGURATION
-# ===========================
-#set(CMAKE_CXX_STANDARD 17)					# Set the C++ standard to C++17
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)			# (optional) If the version is not supported FAIL the build
-
-# Linking the runtime statically
-# This is a workaround for the issue with the static runtime library
-#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
-
-# ===========================
-# CONTROL THE BUILD PROCESS
-# ===========================
-
-# Custom toggles # [ON/OFF] manual switch:
-#option(PRODUCTION_BUILD		" "		OFF) 
-#option(BUILD_SHARED_LIBS	" "		ON) 
-#option(ENABLE_TESTING		" "		ON)
-#option(BUILD_DOCS			" "		ON)
-
-
-# Export toggles to use in the program (NOTE: These are passed as STRINGS! NOT BOOLEAN)
-#add_definitions(-DPRODUCTION_BUILD=${PRODUCTION_BUILD})
-#add_definitions(-DENABLE_TESTING=${ENABLE_TESTING})
-
-
-# STATUS MESSAGES
-#message(STATUS "Starting Build:")
-#message(STATUS "C++ ${CMAKE_CXX_STANDARD} & PRODUCTION_BUILD is ${PRODUCTION_BUILD}")
-
-# ===========================
 # OPTIMISATIONS
 # ===========================
 #
@@ -46,27 +15,84 @@ cmake_minimum_required(VERSION "3.12.0")	# The most recent version is 4.0 (but t
 #	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 #endif()
 #
-## if useing the VS compiler ...
+# if useing the VS compiler ...
 #if (MSVC)
 #add_compile_options(/arch:AVX2) # Enable AVX2 instructions (SIMD optimizations are ensured)
 #endif()
 #
 
+
+# Custom naming for the project
+set(PROJECT_CUSTOM_NAME "MainDllTemplate")
+set(PROJECT_VERSION "1.0.0")
+set(DLL_NAME "mydll.dll")
+
+message(STATUS "Compiling DLL: ${DLL_NAME} (v${PROJECT_VERSION})")
+
+
+# ===========================
+# CONTROL THE BUILD PROCESS
+# ===========================
+
+# Custom toggles # [ON/OFF] manual switch:
+option(PRODUCTION_BUILD		" "		OFF) 
+option(BUILD_SHARED_LIBS	" "		ON) 
+option(ENABLE_TESTING		" "		ON)
+option(BUILD_DOCS			" "		ON)
+
+project(${PROJECT_CUSTOM_NAME} VERSION ${PROJECT_VERSION})	# The name of the project
+
+# Set the C++ standard to C++17 & (optional) If the version is not supported FAIL the build
+set(CMAKE_CXX_STANDARD 17)		
+set(CMAKE_CXX_STANDARD_REQUIRED ON)		
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+# Output directories
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Include custom CMake modules if needed
+#list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+
+# Add subdirectories in build order
+add_subdirectory("src")
+add_subdirectory("tests")
+add_subdirectory("demo")
+
+# ===========================
+# LANGUAGE CONFIGURATION
+# ===========================
+
+# Linking the runtime statically
+# This is a workaround for the issue with the static runtime library
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
+
+
+
+# Export toggles to use in the program (NOTE: These are passed as STRINGS! NOT BOOLEAN)
+# THESE DO NOT WORK HERE! A LINKING 
+#add_definitions(-DPRODUCTION_BUILD=${PRODUCTION_BUILD})
+#add_definitions(-DENABLE_TESTING=${ENABLE_TESTING})
+
+
+# STATUS MESSAGES
+#message(STATUS "Starting Build:")
+#message(STATUS "C++ ${CMAKE_CXX_STANDARD} & PRODUCTION_BUILD is ${PRODUCTION_BUILD}")
+
+
+
 #===========================
 # CREATE THE PROJECT
 #===========================
-project(MainBuild VERSION 0.0.1)	# The name of the project
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/.cmake")
+#list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/.cmake")
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+	
 
 #add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/libs/Catch2") # [TEST LIB] downloaded/cloned from https://github.com/catchorg/Catch2/tree/devel
-add_subdirectory("src")
-add_subdirectory("demo")
-add_subdirectory("tests")
 
 # Define a constant for the C++ project
 # The macro "RESOURCES_PATH" can be used within the program to point to an absoulte path for the resourse
@@ -93,7 +119,25 @@ add_subdirectory("tests")
 #	#set_target_properties("${CMAKE_PROJECT_NAME}" PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 #endif()
 
+
 enable_testing()
+
+#===========================
+# ENABLE TESTING FOR THE PROJECT
+#===========================
+#
+#if(${ENABLE_TESTING})
+#    #add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
+#	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/libs/Catch2")
+#	message(STATUS "Adding math_test library to project ${CMAKE_CURRENT_SOURCE_DIR}")
+#	target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+#	#include(CTest)
+#	#include(Catch)
+#	#catch_discover_tests(${PROJECT_NAME})
+#	message(STATUS "Testing Included")
+#endif()
+
+
 
 message(STATUS "Building : " ${PROJECT_NAME})
 
@@ -128,20 +172,7 @@ message(STATUS "Building : " ${PROJECT_NAME})
 
 
 
-#===========================
-# ENABLE TESTING FOR THE PROJECT
-#===========================
-#
-#if(${ENABLE_TESTING})
-#    enable_testing()
-#    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
-#	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/libs/Catch2")
-#	target_link_libraries(${PROJECT_NAME} PRIVATE math Catch2::Catch2WithMain)
-#	include(CTest)
-#	include(Catch)
-#	catch_discover_tests(${PROJECT_NAME})
-#	message(STATUS "Testing Included")
-#endif()
+
 
 
 

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "mymath.h"
+#include <mymath.h>
 
 //// working prototype for loading the CMakeList variable
 //#ifdef PRODUCTION_BUILD

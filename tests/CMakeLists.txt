@@ -1,14 +1,17 @@
 
-include(AddCatch2)
+#include(AddCatch2)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Catch2")
 
+file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/files/*.cpp")
 # Adding all registered test .cpp files to a separate executable
 # file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "math_test.cpp")
 message(STATUS "Adding math_test library to project ${CMAKE_CURRENT_SOURCE_DIR}")
-add_executable(unit_tests "./mymath_test.cpp")
+add_executable(UnitTests ${MY_SOURCES})
 
 # Link the library added in the top-cmakelists.txt
-target_link_libraries(unit_tests PRIVATE mymath Catch2::Catch2WithMain)
+target_include_directories(UnitTests PRIVATE "${CMAKE_SOURCE_DIR}/include")
+target_link_libraries(UnitTests PRIVATE MainDll Catch2::Catch2WithMain)
 
-include(CTest)
-include(Catch)
-catch_discover_tests(unit_tests)
+#include(CTest)
+#include(Catch)
+#catch_discover_tests(UnitTests)
