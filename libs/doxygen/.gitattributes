@@ -1,9 +1,0 @@
-* text=auto eol=lf
-* text
-
-### Protected
-*.pdf binary
-*.ico binary
-*.jpg binary
-*.png binary
-*.lib binary 

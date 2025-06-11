@@ -15,5 +15,5 @@ TEST_CASE("Addition of two integers", "[addValues]") {
 	REQUIRE(addValues(-1, 1) == 0);
 	REQUIRE(addValues(-1, -1) == -2);
 	REQUIRE(addValues(0, 0) == 0);
-	REQUIRE(addValues(0, 0) == 1);
+	//REQUIRE(addValues(0, 0) == 1);
 }

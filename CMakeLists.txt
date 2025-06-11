@@ -45,7 +45,7 @@ message(STATUS "Compiling DLL: ${LIBRARY_NAME} (v${PROJECT_VERSION})")
 # CONTROL THE BUILD PROCESS
 # ===========================
 
-# Custom toggles # [ON/OFF] manual switch:
+# Custom toggles # [ON/OFF] manual switch with default values:
 option(PRODUCTION_BUILD		" "		OFF) 
 option(BUILD_SHARED_LIBS	" "		ON) 
 option(ENABLE_TESTING		" "		ON)
@@ -58,7 +58,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)		
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-# Output directories
+# Output directories (bundle all output files in the build/bin folder)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -66,13 +66,32 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Include custom CMake modules if needed
 #list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
 
+# ===========================
+# CODE COVERAGE ASSESSMENT
+# ===========================
+
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+set(CODE_COVERAGE ON)
+
+message(STATUS "Coverage: ${CODE_COVERAGE}")
+
+if(CODE_COVERAGE)
+message(STATUS "VAL: ${CMAKE_CXX_COMPILER_ID}")
+	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+	message(STATUS "Code coverage enabled")
+	#        add_compile_options(--coverage -O0 -g)
+	#        add_link_options(--coverage)
+	else()
+	message(STATUS "Code coverage only supported with GCC or Clang")
+	endif()
+endif()
+
 # Add subdirectories in build order
 add_subdirectory("src")
 add_subdirectory("tests")
 add_subdirectory("demo")
 
 enable_testing()
-
 
 # ===========================
 # SETUP DOCUMENTATION GENERATION
@@ -84,16 +103,20 @@ set(DOXYGEN_ZIP ${CMAKE_BINARY_DIR}/doxygen.zip)
 set(DOXYGEN_DIR ${CMAKE_BINARY_DIR}/doxygen-bin)
 set(DOXYGEN_EXE ${CMAKE_BINARY_DIR}/doxygen.exe)
 
+# Debug messages for paths
 message(STATUS "BIN DIR : " ${CMAKE_BINARY_DIR})
 message(STATUS "DOX DIR : " ${DOXYGEN_DIR})
 message(STATUS "Using doxygen from: ${DOXYGEN_EXE}")
 
-# Download and unzip Doxygen binary
-file(DOWNLOAD ${DOXYGEN_ZIP_URL} ${DOXYGEN_ZIP} SHOW_PROGRESS)
-execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${DOXYGEN_ZIP} WORKING_DIRECTORY ${CMAKE_BINARY_DIR} RESULT_VARIABLE unzip_result)
+# Only download Doxygen if it does not exist
+if(NOT EXISTS ${DOXYGEN_EXE})
+	# Download and unzip Doxygen binary
+	file(DOWNLOAD ${DOXYGEN_ZIP_URL} ${DOXYGEN_ZIP} SHOW_PROGRESS)
+	execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${DOXYGEN_ZIP} WORKING_DIRECTORY ${CMAKE_BINARY_DIR} RESULT_VARIABLE unzip_result)
 
-if(NOT unzip_result EQUAL 0)
-    message(FATAL_ERROR "Failed to unzip Doxygen")
+	if(NOT unzip_result EQUAL 0)
+		message(FATAL_ERROR "Failed to unzip Doxygen")
+	endif()
 endif()
 
 # Configure Doxyfile with actual paths
@@ -109,55 +132,10 @@ add_custom_command(
 	VERBATIM
 )
 
+# Explicit shell command to generate documentation
 add_custom_target(doc DEPENDS ${CMAKE_BINARY_DIR}/docs/html/index.html)
 message(STATUS "Source Dir : " ${CMAKE_SOURCE_DIR})
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Path to Doxygen source (cloned repo)
-#set(DOXYGEN_SOURCE_DIR ${CMAKE_SOURCE_DIR}/libs/doxygen)
-
-#set(DOXYGEN_SOURCE_DIR ${CMAKE_SOURCE_DIR}/libs/doxygen)
-#find_package(${DOXYGEN_SOURCE_DIR})
-#message(STATUS "Doxygen found: ${DOXYGEN_FOUND}")
-
-# Build Doxygen from source
-#add_custom_target(BuildDoxygen
-#    COMMAND ${CMAKE_COMMAND} -E chdir ${DOXYGEN_SOURCE_DIR} cmake -Bbuild -H.
-#    COMMAND ${CMAKE_COMMAND} --build "${DOXYGEN_SOURCE_DIR}/build"
-#    COMMENT "Building Doxygen from source"
-#)
-#
-## Generate Doxyfile from template
-#configure_file("${CMAKE_SOURCE_DIR}/Doxyfile.in" "${CMAKE_BINARY_DIR}/Doxyfile" @ONLY)
-#
-## Generate documentation
-#add_custom_target(doc
-#    DEPENDS BuildDoxygen
-#    COMMAND "${DOXYGEN_SOURCE_DIR}/build/bin/doxygen" "${CMAKE_BINARY_DIR}/Doxyfile" > ${CMAKE_BINARY_DIR}/doxygen_output.log 2>&1
-#    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-#    COMMENT "Generating API documentation with Doxygen"
-#)
 
 
 # ===========================
@@ -256,36 +234,3 @@ message(STATUS "Source Dir : " ${CMAKE_SOURCE_DIR})
 # add_subdirectory("./libs/<NAME>") # [TEST LIB] downloaded/cloned from https://github.com/catchorg/Catch2/tree/devel
 # target_link_libraries(${PROJECT_NAME} PRIVATE <NAME>)
 
-
-
-# ==========================
-# CUSTOM CMAKE CONFIGURATION
-# ==========================
-
-#enable_testing()
-#
-## Gather all test source files
-#file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
-#
-## Create the test executable
-#add_executable(UnitTests "${TEST_SOURCES}")
-#
-## Link Catch2 and your main project (if needed)
-#target_link_libraries(UnitTests PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME})
-#
-## Add include directories if needed
-#target_include_directories(UnitTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-#
-## Register the tests with CTest
-#include(CTest)
-#include(Catch)
-#catch_discover_tests(${PROJECT_NAME})
-
-
-
-
-# Add the tests directory
-# target_include_directories(Main PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/tests/")
-
-# target_link_libraries(Main PRIVATE Catch2)
-#target_link_libraries(Main PRIVATE projectname)
