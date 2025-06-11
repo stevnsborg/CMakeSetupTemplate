@@ -15,32 +15,31 @@ cmake_minimum_required(VERSION "3.12.0")	# The most recent version is 4.0 (but t
 #	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 #endif()
 #
-# if useing the VS compiler ...
-#if (MSVC)
-#add_compile_options(/arch:AVX2) # Enable AVX2 instructions (SIMD optimizations are ensured)
-#endif()
-#
 
+# if using the VS compiler 
+if (MSVC)
+add_compile_options(/arch:AVX2) # Enable AVX2 instructions (SIMD optimizations are ensured)
+endif()
+
+# ===========================
+# CONTROL THE BUILD PROCESS
+# ===========================
 
 file(READ "config.txt" CONFIG_CONTENTS)
 
+# Project Name
 string(REGEX MATCH "PROJECT_NAME=([^\n]*)" _ ${CONFIG_CONTENTS})
 string(REGEX REPLACE "PROJECT_NAME=" "" PROJECT_NAME "${CMAKE_MATCH_0}")
 
+# Version number
 string(REGEX MATCH "LIBRARY_NAME=([^\n]*)" _ ${CONFIG_CONTENTS})
 string(REGEX REPLACE "LIBRARY_NAME=" "" LIBRARY_NAME "${CMAKE_MATCH_0}")
 
+# .dll module Name
 string(REGEX MATCH "PROJECT_VERSION=([^\n]*)" _ ${CONFIG_CONTENTS})
 string(REGEX REPLACE "PROJECT_VERSION=" "" PROJECT_VERSION "${CMAKE_MATCH_0}")
 
-
-# Custom naming for the project
-#set(PROJECT_CUSTOM_NAME "MainDllTemplate")
-#set(PROJECT_VERSION "1.0.0")
-#set(DLL_NAME "mydll.dll")
-
 message(STATUS "Compiling DLL: ${LIBRARY_NAME} (v${PROJECT_VERSION})")
-
 
 # ===========================
 # CONTROL THE BUILD PROCESS
@@ -71,6 +70,95 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_subdirectory("src")
 add_subdirectory("tests")
 add_subdirectory("demo")
+
+enable_testing()
+
+
+# ===========================
+# SETUP DOCUMENTATION GENERATION
+# ===========================
+
+# Define Doxygen binary URL and path
+set(DOXYGEN_ZIP_URL "https://github.com/doxygen/doxygen/releases/download/Release_1_14_0/doxygen-1.14.0.windows.x64.bin.zip")
+set(DOXYGEN_ZIP ${CMAKE_BINARY_DIR}/doxygen.zip)
+set(DOXYGEN_DIR ${CMAKE_BINARY_DIR}/doxygen-bin)
+set(DOXYGEN_EXE ${CMAKE_BINARY_DIR}/doxygen.exe)
+
+message(STATUS "BIN DIR : " ${CMAKE_BINARY_DIR})
+message(STATUS "DOX DIR : " ${DOXYGEN_DIR})
+message(STATUS "Using doxygen from: ${DOXYGEN_EXE}")
+
+# Download and unzip Doxygen binary
+file(DOWNLOAD ${DOXYGEN_ZIP_URL} ${DOXYGEN_ZIP} SHOW_PROGRESS)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${DOXYGEN_ZIP} WORKING_DIRECTORY ${CMAKE_BINARY_DIR} RESULT_VARIABLE unzip_result)
+
+if(NOT unzip_result EQUAL 0)
+    message(FATAL_ERROR "Failed to unzip Doxygen")
+endif()
+
+# Configure Doxyfile with actual paths
+set(DOXYFILE_CONFIG ${CMAKE_BINARY_DIR}/Doxyfile.txt)
+configure_file(${CMAKE_SOURCE_DIR}/docs/Doxyfile.in ${DOXYFILE_CONFIG} @ONLY)
+
+# Add documentation target
+add_custom_command(
+	OUTPUT ${CMAKE_BINARY_DIR}/docs/html/index.html 
+	COMMAND ${DOXYGEN_EXE} ${DOXYFILE_CONFIG} 
+	DEPENDS ${DOXYFILE_CONFIG} 
+	COMMENT "Generating API documentation with downloaded Doxygen"
+	VERBATIM
+)
+
+add_custom_target(doc DEPENDS ${CMAKE_BINARY_DIR}/docs/html/index.html)
+message(STATUS "Source Dir : " ${CMAKE_SOURCE_DIR})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Path to Doxygen source (cloned repo)
+#set(DOXYGEN_SOURCE_DIR ${CMAKE_SOURCE_DIR}/libs/doxygen)
+
+#set(DOXYGEN_SOURCE_DIR ${CMAKE_SOURCE_DIR}/libs/doxygen)
+#find_package(${DOXYGEN_SOURCE_DIR})
+#message(STATUS "Doxygen found: ${DOXYGEN_FOUND}")
+
+# Build Doxygen from source
+#add_custom_target(BuildDoxygen
+#    COMMAND ${CMAKE_COMMAND} -E chdir ${DOXYGEN_SOURCE_DIR} cmake -Bbuild -H.
+#    COMMAND ${CMAKE_COMMAND} --build "${DOXYGEN_SOURCE_DIR}/build"
+#    COMMENT "Building Doxygen from source"
+#)
+#
+## Generate Doxyfile from template
+#configure_file("${CMAKE_SOURCE_DIR}/Doxyfile.in" "${CMAKE_BINARY_DIR}/Doxyfile" @ONLY)
+#
+## Generate documentation
+#add_custom_target(doc
+#    DEPENDS BuildDoxygen
+#    COMMAND "${DOXYGEN_SOURCE_DIR}/build/bin/doxygen" "${CMAKE_BINARY_DIR}/Doxyfile" > ${CMAKE_BINARY_DIR}/doxygen_output.log 2>&1
+#    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+#    COMMENT "Generating API documentation with Doxygen"
+#)
+
 
 # ===========================
 # LANGUAGE CONFIGURATION
@@ -132,7 +220,6 @@ add_subdirectory("demo")
 #endif()
 
 
-enable_testing()
 
 #===========================
 # ENABLE TESTING FOR THE PROJECT
@@ -149,7 +236,6 @@ enable_testing()
 #	message(STATUS "Testing Included")
 #endif()
 
-message(STATUS "Building : " ${PROJECT_NAME})
 
 # ===========================
 # LINKING LIBRARIES 

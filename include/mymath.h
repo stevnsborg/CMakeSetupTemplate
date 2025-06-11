@@ -9,4 +9,12 @@
 //#define MYLIB_API
 //#endif
 
+
+/**
+ * @brief Adds two integers.
+ *
+ * @param a First operand.
+ * @param b Second operand.
+ * @return Sum of a and b.
+ */
 MYLIB_API int addValues(int a, int b);
